@@ -13,17 +13,14 @@ const firebaseConfig = {
     appId: "1:814443216380:web:22aaabcdf86615254c4679"
 };
 
-// Initialize Firebase Services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const fs = getFirestore(app);
 
-// --- GLOBAL STATE ---
 let charts = { temp: null, moisture: null, gas: null };
-let compostTimerInterval = null; // Holds the 1-second UI refresher
+let compostTimerInterval = null; 
 
-// --- CHART INITIALIZATION ---
 function initCharts() {
     const chartConfig = (label, color) => ({
         type: 'line',
@@ -42,17 +39,20 @@ function initCharts() {
         options: { 
             responsive: true, 
             maintainAspectRatio: false, 
+            animation: false,
             plugins: { legend: { display: false } },
-            scales: { x: { display: false } }
+            scales: { 
+                x: { display: true, ticks: { maxTicksLimit: 5 } },
+                y: { beginAtZero: true }
+            }
         }
     });
 
-    charts.temp = new Chart(document.getElementById('tempChart'), chartConfig('Temp', '#bc4749'));
-    charts.moisture = new Chart(document.getElementById('moistureChart'), chartConfig('Moisture', '#2d6a4f'));
-    charts.gas = new Chart(document.getElementById('gasChart'), chartConfig('Gas', '#ffb703'));
+    charts.temp = new Chart(document.getElementById('tempChart'), chartConfig('Temp (°C)', '#bc4749'));
+    charts.moisture = new Chart(document.getElementById('moistureChart'), chartConfig('Moisture (%)', '#2d6a4f'));
+    charts.gas = new Chart(document.getElementById('gasChart'), chartConfig('Gas (ppm)', '#ffb703'));
 }
 
-// --- AUTHENTICATION FLOW ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('auth-screen').style.display = 'none';
@@ -76,7 +76,6 @@ document.getElementById('login-form').onsubmit = async (e) => {
 
 document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-// --- MAIN DASHBOARD LOGIC ---
 function startDashboard() {
     const m1Input = document.getElementById('mix1');
     const m2Input = document.getElementById('mix2');
@@ -92,7 +91,6 @@ function startDashboard() {
     let lastFirestoreLog = 0; 
     let cooldownTargets = { motor: 0, fan: 0, pump: 0 };
 
-    // 1. Populate Dropdowns (0-23 hours)
     [m1Input, m2Input, m3Input].forEach(select => {
         select.innerHTML = '';
         for (let i = 0; i < 24; i++) {
@@ -102,7 +100,6 @@ function startDashboard() {
         }
     });
 
-    // 2. Local Cooldown Logic (Runs every second)
     setInterval(() => {
         const now = Date.now();
         const mode = document.getElementById('current-mode').innerText;
@@ -120,30 +117,12 @@ function startDashboard() {
         });
     }, 1000);
 
-    // 3. Firestore Logging Function (Archives data for thesis)
-    async function logToFirestore(t, m, g) {
-        try {
-            await addDoc(collection(fs, "sensor_history"), {
-                temperature: t,
-                moisture: m,
-                gas: g,
-                timestamp: serverTimestamp()
-            });
-            console.log("📊 Firestore Logged Successfully");
-        } catch (e) {
-            console.error("Firestore Error: ", e);
-        }
-    }
-
-    // 4. Real-time Database Listener
     onValue(ref(db, '/'), (snapshot) => {
         const root = snapshot.val();
         if (!root) return;
 
-        // A. Manual Cooldown Sync
         if (root.Cooldown) cooldownTargets = root.Cooldown;
 
-        // B. Mode Logic
         const mode = root.Control?.mode || "MANUAL";
         document.getElementById('current-mode').innerText = mode;
         const isAuto = (mode === "AUTO");
@@ -151,7 +130,7 @@ function startDashboard() {
         document.getElementById('mode-manual').classList.toggle('active', !isAuto);
         timerContainer.style.display = isAuto ? 'block' : 'none';
 
-        // C. Mixing Schedule Logic
+        // --- RESTORED: MIXING SCHEDULE & RTC TIMER ---
         if (root.MixSchedule) {
             const s1 = parseInt(root.MixSchedule.mix1);
             preview.innerText = `${s1}:00, ${(s1+8)%24}:00, ${(s1+16)%24}:00`;
@@ -160,6 +139,7 @@ function startDashboard() {
                 m2Input.value = (s1 + 8) % 24;
                 m3Input.value = (s1 + 16) % 24;
             }
+            // RTC Countdown Logic
             if (isAuto && root.RTC) {
                 const nowSecs = (root.RTC.hour * 3600) + (root.RTC.minute * 60) + root.RTC.second;
                 const targets = [s1 * 3600, ((s1+8)%24) * 3600, ((s1+16)%24) * 3600].sort((a,b)=>a-b);
@@ -169,7 +149,6 @@ function startDashboard() {
             }
         }
 
-        // D. Sensor Data & Hybrid Archiving
         if (root.SensorData) {
             const t = root.SensorData.temperature || 0;
             const m = root.SensorData.soilMoisturePercent || 0;
@@ -180,84 +159,67 @@ function startDashboard() {
             document.getElementById('gas-val').innerText = g;
 
             const now = Date.now();
-
-            // UI Chart Update (Every 5 seconds)
             if (now - lastChartUpdate > 5000) {
-                const timeLabel = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const timeLabel = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 const dataMap = { temp: t, moisture: m, gas: g };
                 Object.keys(charts).forEach(key => {
-                    if (charts[key]) {
-                        charts[key].data.labels.push(timeLabel);
-                        charts[key].data.datasets[0].data.push(dataMap[key]);
-                        if (charts[key].data.labels.length > 20) charts[key].data.labels.shift();
-                        charts[key].update('none');
+                    const chart = charts[key];
+                    if (chart) {
+                        chart.data.labels.push(timeLabel);
+                        chart.data.datasets[0].data.push(dataMap[key]);
+                        if (chart.data.labels.length > 20) {
+                            chart.data.labels.shift();
+                            chart.data.datasets[0].data.shift();
+                        }
+                        chart.update('none'); 
                     }
                 });
                 lastChartUpdate = now;
             }
 
-            // Firestore Hybrid Log (Every 10 minutes)
             if (now - lastFirestoreLog > 600000) {
-                logToFirestore(t, m, g);
+                addDoc(collection(fs, "sensor_history"), { temperature: t, moisture: m, gas: g, timestamp: serverTimestamp() });
                 lastFirestoreLog = now;
             }
         }
-
-        // E. Process Tracking (28-Day Timer with Minutes)
-        const statusText = document.getElementById('compost-status');
-        const timeElapsedText = document.getElementById('time-elapsed');
-        const progressContainer = document.getElementById('progress-container');
-
-        if (compostTimerInterval) clearInterval(compostTimerInterval); // Reset interval
 
         if (root.Process?.startTime) {
             compostingStartTime = root.Process.startTime;
             startBtn.innerText = "Stop Composting";
             startBtn.style.backgroundColor = "#bc4749";
-            progressContainer.style.display = 'block';
-
+            document.getElementById('progress-container').style.display = 'block';
+            if (compostTimerInterval) clearInterval(compostTimerInterval);
             compostTimerInterval = setInterval(() => {
-                const now = Date.now();
-                const diff = now - compostingStartTime;
-                
+                const diff = Date.now() - compostingStartTime;
                 const d = Math.floor(diff / (24 * 60 * 60 * 1000));
                 const h = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
                 const m = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
                 const s = Math.floor((diff % (60 * 1000)) / 1000);
-
-                timeElapsedText.innerText = `Elapsed: ${d}d ${h}h ${m}m ${s}s`;
-                statusText.innerText = "Decomposing...";
-                statusText.style.color = "#2d6a4f";
-
+                document.getElementById('time-elapsed').innerText = `Elapsed: ${d}d ${h}h ${m}m ${s}s`;
                 const progress = Math.min(100, (diff / (28 * 24 * 60 * 60 * 1000)) * 100);
                 progressFill.style.width = `${progress}%`;
                 document.getElementById('percent-text').innerText = `${progress.toFixed(2)}% Complete`;
-                if (progress >= 100) statusText.innerText = "Batch Complete!";
             }, 1000);
-
         } else {
             compostingStartTime = null;
             startBtn.innerText = "Start Composting";
             startBtn.style.backgroundColor = "#2d6a4f";
-            statusText.innerText = "Inactive";
-            statusText.style.color = "#777";
-            timeElapsedText.innerText = "Elapsed: 0d 0h 0m 0s";
-            progressContainer.style.display = 'none';
+            document.getElementById('progress-container').style.display = 'none';
         }
     });
 
-    // --- 5. CLICK HANDLERS ---
     document.getElementById('mode-auto').onclick = () => set(ref(db, 'Control/mode'), "AUTO");
     document.getElementById('mode-manual').onclick = () => set(ref(db, 'Control/mode'), "MANUAL");
-
-    startBtn.onclick = () => {
-        set(ref(db, 'Process/startTime'), compostingStartTime ? null : Date.now());
-    };
-
+    startBtn.onclick = () => set(ref(db, 'Process/startTime'), compostingStartTime ? null : Date.now());
+    
+    // --- RESTORED: UPDATE SCHEDULE SAVE BUTTON ---
     document.getElementById('update-schedule').onclick = () => {
         const val = parseInt(m1Input.value);
-        update(ref(db, 'MixSchedule'), { mix1: val, mix2: (val + 8) % 24, mix3: (val + 16) % 24 })
-            .then(() => alert("Schedule Synchronized!"));
+        update(ref(db, 'MixSchedule'), { 
+            mix1: val, 
+            mix2: (val + 8) % 24, 
+            mix3: (val + 16) % 24 
+        }).then(() => alert("Schedule Synchronized!"));
     };
 
     const triggerAction = (key, runTimeMs, cooldownMins) => {
