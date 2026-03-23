@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Compost Bin | Thesis Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- SECTION: Authentication Screen -->
+    <div id="auth-screen">
+        <div class="login-box">
+            <div class="header">
+                <span class="icon">🌱</span>
+                <h1>Automated Compost Bin</h1>
+                <p>Thesis Project Management System</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" value="julesjose23@gmail.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+                <p id="auth-error" class="error-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION: Main Dashboard -->
+    <div id="dashboard-screen" style="display: none;">
+        <nav class="navbar">
+            <div class="nav-brand">🌿 Compost Bin Monitor <span id="status-dot" class="dot-offline"></span></div>
+            <button id="logout-btn" class="btn-logout">Logout</button>
+        </nav>
+
+        <main class="container">
+            
+            <!-- NEW: Process Tracker (Above Sensors) -->
+            <div class="card" id="process-card" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Composting Progress <span id="compost-status"></span></h3>
+                    <button id="btn-start-compost" class="btn-primary" style="width: auto; padding: 8px 20px;">Start Composting</button>
+                </div>
+                
+                <div id="progress-container" style="margin-top: 15px; display: none; border-top: 1px solid #eee; padding-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px;">
+                        <span id="time-elapsed" style="font-weight: 500;">Elapsed: 0d 0h 0m 0s</span>
+                        <span id="percent-text" style="color: #2d6a4f; font-weight: bold;">0% Complete</span>
+                    </div>
+                    
+                    <div style="background: #e9ecef; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; border: 1px solid #ddd;">
+                        <div id="progress-fill" style="background: linear-gradient(90deg, #2d6a4f, #52b788); height: 100%; width: 0%; transition: width 0.8s ease-in-out;"></div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.75rem; color: #777;">
+                        <span>Week 1: Mesophilic</span>
+                        <span>Week 2-3: Thermophilic</span>
+                        <span>Week 4: Curing</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 1: Sensor Readings -->
+            <div class="grid">
+                <div class="card sensor-card" id="card-temp">
+                    <h3>Temperature</h3>
+                    <p class="value"><span id="temp-val">--</span>°C</p>
+                    <div class="range-box">
+                        <span class="range-label">Optimal:</span>
+                        <span class="range-value">25 - 65°C</span>
+                    </div>
+                </div>
+
+                <div class="card sensor-card" id="card-soil">
+                    <h3>Soil Moisture</h3>
+                    <p class="value"><span id="soil-val">--</span>%</p>
+                    <div class="range-box">
+                        <span class="range-label">Optimal:</span>
+                        <span class="range-value">50 - 100%</span>
+                    </div>
+                </div>
+
+                <div class="card sensor-card" id="card-gas">
+                    <h3>Gas Level</h3>
+                    <p class="value"><span id="gas-val">--</span></p>
+                    <div class="range-box">
+                        <span class="range-label">Optimal:</span>
+                        <span class="range-value">500 - 2500</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: System Control & Actuators -->
+            <div class="grid">
+                <!-- System Mode Card -->
+                <div class="card">
+                    <h3>System Mode</h3>
+                    <div class="mode-toggle">
+                        <button id="mode-auto" class="btn-outline">AUTO</button>
+                        <button id="mode-manual" class="btn-outline">MANUAL</button>
+                    </div>
+                    <p style="margin-top: 10px;">Current: <strong id="current-mode">--</strong></p>
+                </div>
+
+                <!-- Manual Actuators Card -->
+                <div class="card">
+                    <h3>Manual Actuators</h3>
+                    <div class="btn-group">
+                        <button id="btn-motor" class="btn-outline ctrl-btn">Motor</button>
+                        <button id="btn-fan" class="btn-outline ctrl-btn">Fan</button>
+                        <button id="btn-pump" class="btn-outline ctrl-btn">Pump</button>
+                    </div>
+
+                    <div id="timer-container" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; color: #666;">Next Scheduled Mix:</span>
+                            <span id="next-mix-timer" style="font-size: 0.9rem; font-weight: bold; color: #2d6a4f; font-family: monospace;">--h --m --s</span>
+                        </div>
+                    </div>
+                    <p class="hint" style="margin-top: 10px;">*Controls disabled in Auto Mode</p>
+                </div>
+            </div>
+
+            <!-- ROW 3: Schedule Management -->
+            <div class="card">
+                <h3>8-Hour Mixing Schedule (24h)</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">
+                    Select the <strong>Start Time</strong>. The system maintains 8-hour intervals automatically.
+                </p>
+                <div class="schedule-inputs">
+                    <div class="sch-group">
+                        <label>Start Time (Mix 1)</label>
+                        <select id="mix1" class="time-select"></select>
+                    </div>
+                    <div class="sch-group">
+                        <label>Auto Mix 2</label>
+                        <select id="mix2" class="time-select" disabled style="background: #f4f4f4; cursor: not-allowed;"></select>
+                    </div>
+                    <div class="sch-group">
+                        <label>Auto Mix 3</label>
+                        <select id="mix3" class="time-select" disabled style="background: #f4f4f4; cursor: not-allowed;"></select>
+                    </div>
+                    <button id="update-schedule" class="btn-primary" style="width: auto;">Save</button>
+                </div>
+                <p class="hint" style="margin-top: 10px;">Active Cycles: <span id="interval-preview" style="font-weight: bold;">--:00</span></p>
+            </div>
+        </main>
+        <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+    <div class="chart-box" style="background: white; padding: 15px; border-radius: 12px; height: 300px;">
+        <canvas id="tempChart"></canvas>
+    </div>
+    <div class="chart-box" style="background: white; padding: 15px; border-radius: 12px; height: 300px;">
+        <canvas id="moistureChart"></canvas>
+    </div>
+    <div class="chart-box" style="background: white; padding: 15px; border-radius: 12px; height: 300px;">
+        <canvas id="gasChart"></canvas>
+    </div>
+</div>
+
+    </div>
+
+    <!-- Load JavaScript as a Module -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
