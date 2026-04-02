@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Compost Bin Monitoring</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div id="auth-screen">
+        <div class="login-box">
+            <div class="header">
+                <span class="icon">🌱</span>
+                <h1>Compost Bin Monitoring</h1>
+                <p>Thesis Project Management System</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+                <p id="auth-error" class="error-msg"></p>
+            </form>
+        </div>
+    </div>
+    <script type="module" src="login.js"></script>
+</body>
+</html>

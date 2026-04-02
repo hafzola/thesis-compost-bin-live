@@ -1,0 +1,94 @@
+:root {
+    --primary: #2d6a4f;
+    --secondary: #40916c;
+    --bg: #f8f9fa;
+    --white: #ffffff;
+    --text: #1b4332;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.navbar {
+    background: var(--primary);
+    color: white;
+    padding: 1rem 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.dot-offline { height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-left: 8px;}
+.dot-online { height: 10px; width: 10px; background-color: #4dfd4d; border-radius: 50%; display: inline-block; margin-left: 8px;}
+
+.btn-logout {
+    background-color: #bc4749;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.history-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hist-card {
+    margin-bottom: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.hist-chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.btn-primary { 
+    background: var(--primary); color: white; border: none; padding: 10px 15px; 
+    border-radius: 5px; cursor: pointer; font-weight: bold;
+}
+
+.btn-outline {
+    background: white; color: var(--primary); border: 1px solid var(--primary); 
+    padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
+}
+
+.btn-back {
+    background: #6c757d; color: white; border: none; padding: 10px 15px; 
+    border-radius: 5px; cursor: pointer; font-weight: bold;
+}
