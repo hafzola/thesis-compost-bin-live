@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History | Compost Bin Monitoring</title>
+    <link rel="stylesheet" href="history.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="history-screen">
+        <nav class="navbar">
+            <div class="nav-brand">🌿 Compost Bin Monitor <span id="status-dot" class="dot-offline"></span></div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-close-history" class="btn-outline" style="background: white; color: #2d6a4f; border: 1px solid #2d6a4f; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    🏠 Back to Dashboard
+                </button>
+                <button id="logout-btn" class="btn-logout">Logout</button>
+            </div>
+        </nav>
+
+        <div class="history-header">
+            <div>
+                <h1 style="margin: 0; font-size: 1.5rem;">Project History</h1>
+                <p style="margin: 5px 0 0; color: #666;">Data Export & Analysis</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="view-selector">
+                    <button id="btn-view-daily" class="view-btn active">Daily Average</button>
+                    <button id="btn-view-hourly" class="view-btn">Hourly Logs</button>
+                </div>
+                <button id="btn-export-hourly-csv" class="btn-primary">📥 Download Hourly CSV</button>
+                <button id="btn-export-csv" class="btn-outline">📊 Download Daily Averages</button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" class="date-input">
+            </div>
+            <div class="filter-group">
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" class="date-input">
+            </div>
+            <button id="btn-apply-filter" class="btn-primary" style="padding: 8px 20px;">Apply Filter</button>
+        </div>
+
+        <div class="history-container">
+            <div class="hist-card">
+                <h3 id="title-temp">🌡️ Temperature (Daily Average)</h3>
+                <div class="hist-chart-wrapper"><canvas id="histTempChart"></canvas></div>
+            </div>
+            <div class="hist-card">
+                <h3 id="title-moisture">💧 Moisture (Daily Average)</h3>
+                <div class="hist-chart-wrapper"><canvas id="histMoistureChart"></canvas></div>
+            </div>
+            <div class="hist-card">
+                <h3 id="title-gas">💨 Gas (Daily Average)</h3>
+                <div class="hist-chart-wrapper"><canvas id="histGasChart"></canvas></div>
+            </div>
+
+            <div class="hist-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">📜 System Event Logs</h3>
+                    <div class="log-filter" style="display: flex; gap: 5px;">
+                        <button class="log-filter-btn active" data-category="all" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; border: 1px solid #ddd; background: #f8fbf9; cursor: pointer;">All</button>
+                        <button class="log-filter-btn" data-category="alert" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; border: 1px solid #ddd; background: #f8fbf9; cursor: pointer;">Alerts</button>
+                        <button class="log-filter-btn" data-category="activity" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; border: 1px solid #ddd; background: #f8fbf9; cursor: pointer;">Activity</button>
+                    </div>
+                </div>
+                <div id="history-logs-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 10px;">
+                    <p class="hint">Select a date range and apply filter to view logs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="history.js"></script>
+</body>
+</html>
